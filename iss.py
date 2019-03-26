@@ -19,34 +19,38 @@ def get_coordinates():
     return coordinate_data.json()
 
 def indy_time():
-    coordinates = {'lat: 39.7684', 'lon: -861581'}
+   
+    coordinates = {'lat': 39.7684, 'lon': -86.1581}
     request = requests.get("http://api.open-notify.org/iss-pass.json", params=coordinates)
     #time stamp
-    pass_time = time.ctime(request.json(['response'][0]['risetime']))
+    value = request.json()
+    print value['response'][0]['risetime']
+    pass_time = time.ctime(value['response'][0]['risetime'])
     return pass_time
 
-def get_map()
+def get_map():
     data = get_coordinates()
     pos = data['iss_position']
-    longitude = data['longitude']
-    latitude = data['latitude']
+    longitude = pos['longitude']
+    latitude = pos['latitude']
     screen = turtle.Screen()
     screen.bgpic('map.gif')
-    screen.setup(width=720, height=360, startx=None, starty=None)
+    screen.setup(width=720, height=360, startx=None, starty=None) #sets up size of the screen
     screen.setworldcoordinates(-180, -90, 180, 90)
     screen.register_shape('iss.gif')
 
     iss = turtle.Turtle()
+    iss.shape('iss.gif')
     iss.setheading(90)
     iss.penup()
     iss.goto(float(longitude), float(latitude))
 
     indy = turtle.Turtle()
     indy.penup()
-    indy.color('green')
-    indy.goto(39.7684, -86.1581)
+    indy.color('yellow')
+    indy.goto(-86.1581, 39.7684,)
     indy.dot(5)
-    indy.write(indy_time)
+    indy.write(indy_time())
     screen.exitonclick()
 
 
@@ -58,9 +62,31 @@ def create_parser():
     return parser
 
 
-def main():
+def main(args):
+    parser = create_parser()
+    parsed_args = parser.parse_args(args)
+
+    if parsed_args.astro:
+        astronauts = get_astronauts()
+        for astronaut in astronauts['people']:
+            print("Astronaut {} is aboard the {}".format(astronaut['name'], astronaut['craft']))
+            print("Number of astronauts in space: {}".format(astronauts['number']))
+    
+    elif parsed_args.coords:
+        coordinates = get_coordinates()
+        print("The ISS is located at latitude {} and longitude {} on {}"
+              .format(coordinates['iss_position']['latitude'],
+                      coordinates['iss_position']['longitude'],
+                      time.ctime(coordinates['timestamp'])))
+    
+    elif parsed_args.map:
+        date = indy_time()
+        get_map()
+        print("The ISS will pass over Indianapolis, IN on {}".format(date))
+
     
 
 
 if __name__ == '__main__':
-    main()
+    
+    main(sys.argv[1:])
